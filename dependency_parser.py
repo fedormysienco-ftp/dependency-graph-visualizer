@@ -3,7 +3,6 @@ import json
 
 
 class DependencyParser:
-    # конструктор
     def __init__(self, config):
         self.config = config
 
@@ -42,14 +41,14 @@ class DependencyParser:
 
     # извлекает прямые зависимости пакета
     def get_dependencies(self, package_name: str, version: str = None) -> set:
-        package_info = self.get_package_info(package_name, version) # получает информацию о пакете
+        package_info = self.get_package_info(package_name, version)
 
         if not package_info:
             print(f"Не удалось получить информацию о пакете {package_name}")
-            return set() # вернем пустое множество
+            return set()
 
 
-        # зависимости находятся прямо в корне (тут извлекаем)
+        # зависимости находятся прямо в корне
         dependencies = package_info.get('dependencies', {})
 
         print(f"\nПрямые зависимости пакета {package_name}:")
@@ -93,5 +92,5 @@ if __name__ == "__main__":
 
 
     print("=== Демонстрация Этапа 2 ===")
-    parser = DependencyParser(TestConfig()) # создали парсер
-    dependencies = parser.get_dependencies('express') # нашли зависимости
+    parser = DependencyParser(TestConfig())
+    dependencies = parser.get_dependencies('express')

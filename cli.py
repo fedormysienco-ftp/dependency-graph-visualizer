@@ -3,7 +3,6 @@ import sys
 import csv
 
 class CLIConfig:
-    #конструктор
     def __init__(self):
         try:
             self.params = self.csv_file()
@@ -11,14 +10,9 @@ class CLIConfig:
         except FileNotFoundError:
             self.params = self.command_line()
             self.input_type = 'command_line'
-        except ValueError as e:
-            print(f" Ошибка в CSV конфигурации: {e}")
-            sys.exit(1)
-        except Exception as e:
-            print(f" Ошибка чтения CSV: {e}")
-            sys.exit(1)
 
         self.validate_params()
+
         self.print_params()
 
     # валидация всех параметров и для CSV и для command_line
@@ -85,7 +79,7 @@ class CLIConfig:
             return params
 
         except Exception as e:
-            raise  # просто перебрасываем исключение
+            raise FileNotFoundError('csv_config.csv file not found')
 
     # парсит аргументы из командной строки и делает params
     def command_line(self):
@@ -234,9 +228,9 @@ def test_invalid_repo_url():
 
 if __name__ == "__main__":
     try:
-        cli = CLIConfig() #создали объект словарь параметров ключ - знач
+        cli = CLIConfig()
 
-        demonstrate_error_handling() # демонстрация обработки ошибок
+        demonstrate_error_handling()
 
     except Exception as e:
         print(f"Ошибка: {e}")
