@@ -51,7 +51,7 @@ class CLIConfig:
                 for row in reader:
                     parameter = row['parameter']
                     value = row['value']
-                    params[parameter] = value
+                    params[parameter] = value.strip()
 
             if not params['package_name']:
                 raise ValueError('package_name cannot be empty')
