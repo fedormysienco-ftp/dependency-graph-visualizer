@@ -1,0 +1,7 @@
+parameter,value
+package_name,,
+repo_url,https://registry.npmjs.org
+test_mode,false
+output_file,dependency_graph.png
+max_depth, 5
+filter_substring,react
