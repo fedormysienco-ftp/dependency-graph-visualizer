@@ -5,48 +5,64 @@ import urllib.request
 import json
 
 
-class NpmDependencyAnalyzer:
+class DependencyParser:
     def __init__(self, config):
         self.config = config
 
-    def get_dependencies(self):
+    def get_package_info(self, package_name: str, version: str = None) -> dict:
         try:
-            # формируем url
-            url = f"{self.config.params['repo_url']}/{self.config.params['package_name']}"
+            # формируем базовый url репозитория
+            base_url = self.config.params['repo_url'].rstrip('/')
+            # очищаем имя пакета от пробелов
+            package_name = package_name.strip()
+            version = (version or 'latest').strip()
+
+            # создаем полный url для запроса
+            url = f"{base_url}/{package_name}"
             print(f"запрос к: {url}")
-
-            # делаем http запрос
+            # выполняем http get запрос
             with urllib.request.urlopen(url) as response:
+                # парсим json данные в python словарь
                 data = json.loads(response.read().decode('utf-8'))
-
-            # отладочная информация
-            print(f"получены данные о пакете: {data.get('name')}")
-            print(f"последняя версия: {data['dist-tags']['latest']}")
-
-            latest_version = data['dist-tags']['latest']
-            version_data = data['versions'][latest_version] #последняя стабильная версия пакета React в npm
-
-            print(f"все поля в версии {latest_version}: {list(version_data.keys())}") #список всех полей, которые содержатся в информации о версии пакета React из npm registry.
-
-
-            # парсим зависимости из всех источников
-            dependencies = {}
-
-            dependencies.update(version_data.get('peerDependencies', {}))
-
-            # выводим результат
-            print(f"")
-            if dependencies:
-                for i, dep in enumerate(dependencies.keys(), 1):
-                    print(f"  {i}. {dep}")
-                print(f"всего: {len(dependencies)} зависимостей")
-            else:
-                print("")
-
+            return data
         except Exception as e:
-            print(f"ошибка при получении зависимостей: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Ошибка при получении информации о пакете {package_name}: {e}")
+            return None
+
+    # получает инфу о пакете через гет инфо, собирает и выводит зависимости
+    def get_dependencies(self, package_name: str, version: str = None):
+        package_info = self.get_package_info(package_name, version)
+
+        if not package_info:
+            print(f"Не удалось получить информацию о пакете {package_name}")
+            return {}
+
+        # отладочная информация (как в вашем CLI)
+        print(f"получены данные о пакете: {package_info.get('name')}")
+        print(f"последняя версия: {package_info['dist-tags']['latest']}")
+
+        latest_version = package_info['dist-tags']['latest']
+        version_data = package_info['versions'][latest_version]
+
+        print(f"все поля в версии {latest_version}: {list(version_data.keys())}")
+
+        # парсим зависимости из всех источников
+        dependencies = {}
+        dependencies.update(version_data.get('dependencies', {}))
+        dependencies.update(version_data.get('peerDependencies', {}))
+        dependencies.update(version_data.get('devDependencies', {}))
+
+        # Выводим зависимости в формате парсера
+        print(f"\nПрямые зависимости пакета {package_name}:")
+        if dependencies:
+            for dep_name, dep_version in dependencies.items():
+                print(f"  - {dep_name}: {dep_version}")
+            print(f"\nВсего прямых зависимостей: {len(dependencies)}")
+        else:
+            print("  - Зависимости не найдены")
+
+        return dependencies
+
 
 
 class CLIConfig:
@@ -65,7 +81,6 @@ class CLIConfig:
             sys.exit(1)
 
         self.validate_params()
-
         self.print_params()
 
     def validate_params(self):
@@ -278,8 +293,9 @@ if __name__ == "__main__":
         cli = CLIConfig()
         demonstrate_error_handling()
 
-        analyzer = NpmDependencyAnalyzer(cli)
-        analyzer.get_dependencies()
+        # используем DependencyParser вместо NpmDependencyAnalyzer
+        parser = DependencyParser(cli)
+        parser.get_dependencies(cli.params['package_name'])
 
     except Exception as e:
         print(f"ошибка: {e}")
